@@ -1,33 +1,42 @@
 "use strict";
 var canvas = document.getElementById("canvas");
 var ctx = canvas.getContext("2d");
-ctx.fillStyle = "rgb(0, 0, 0)";
-
 var pauseButton = document.getElementById("pause");
 var startButton = document.getElementById("start");
 
-//standard grid
-var row = 19; // + 1
-var column = 9; // + 1
+let count = 0,
+  timer,
+  paused = false;
+function counter() {
+  count++;
+  timer = setTimeout(function() {
+    counter();
+  }, 1000);
+}
+
+pauseButton.addEventListener("click", () => {
+  clearTimeout(timer);
+  if (pauseButton.innerHTML === "Pause") {
+    pauseButton.innerHTML = "Unpause";
+    paused = false;
+    counter();
+  } else {
+    pauseButton.innerHTML = "Pause";
+    paused = !paused;
+    if (!paused) {
+      counter();
+    }
+  }
+});
+
+ctx.fillStyle = "rgb(0, 0, 0)";
+
+//starting positions
 let x = 4;
 let y = 0;
+startGame();
 
-var grid = new Array();
-
-for (let i = 0; i <= row; i++) {
-  grid[i] = new Array();
-  for (let j = 0; j <= column; j++) {
-    grid[i][j] = 0;
-  }
-}
-
-// declare blocks in memory and DOM
-function blockPosAndPrint(a, b, c, d, e, f, g, h) {
-  let block = ctx.fillRect(30 * a, 30 * b, 30 * c, 30 * d);
-  let block2 = ctx.fillRect(30 * e, 30 * f, 30 * g, 30 * h);
-  return block && block2;
-}
-
+// declare blocks in memory and DOM foreach block called
 class ODisplayBlock {
   ODisplayBlock = blockPosAndPrint(x + 1, y, 1, 2, x, y, 1, 2);
   OBlock = [
@@ -92,32 +101,14 @@ class TDisplayBlock {
   ];
 }
 
-//PAUSE - OFF GAME LOOP ONTO TEMP LOOP
-var c = 0;
-var t;
-var pause = 0;
-
-function timedCount() {
-  document.getElementById("txt").value = c;
-  c = c + 1;
-  t = setTimeout(timedCount, 1000);
+function runGame() {
+  initGrid();
+  getRandomBlock();
+  console.log(counter());
 }
 
-function startCount() {
-  if (!pause) {
-    pause = 1;
-    timedCount();
-  }
-}
-
-function stopCount() {
-  clearTimeout(t);
-  pause = 0;
-}
-
-function mainGameLoop() {
-  y++;
-  switch (0 /*Math.floor(Math.random() * 7)*/) {
+function getRandomBlock() {
+  switch (Math.floor(Math.random() * 7)) {
     case 0:
       new ODisplayBlock();
       break;
@@ -139,7 +130,35 @@ function mainGameLoop() {
     case 6:
       new JDisplayBlock();
       break;
-    default:
-      console.log("error curBlock issue");
   }
+}
+function startGame() {
+  let gameOn;
+  startButton.addEventListener("click", () => {
+    if (gameOn === true) {
+      return;
+    } else {
+      gameOn = true;
+      runGame();
+    }
+  });
+}
+function blockPosAndPrint(a, b, c, d, e, f, g, h) {
+  let block = ctx.fillRect(30 * a, 30 * b, 30 * c, 30 * d);
+  let block2 = ctx.fillRect(30 * e, 30 * f, 30 * g, 30 * h);
+  return block && block2;
+}
+function initGrid() {
+  //standard grid
+  var row = 19; // + 1
+  var column = 9; // + 1
+  let grid = new Array();
+
+  for (let i = 0; i <= row; i++) {
+    grid[i] = new Array();
+    for (let j = 0; j <= column; j++) {
+      grid[i][j] = 0;
+    }
+  }
+  return grid;
 }
