@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="index.css" />
+    <title>Tetris</title>
+  </head>
+  <body>
+    <div class="main">
+      <canvas id="canvas"></canvas>
+    </div>
+
+    <div id="second" class="secondary secondary-add">
+      <h4>Next Block</h4>
+      <div class="box">
+        <div id="image"></div>
+      </div>
+      <h4>Score</h4>
+      <div class="box box-2">
+        <p id="scoreCount">00000000</p>
+      </div>
+      <h4>Level</h4>
+      <div class="box box-2">
+        <p id="level">0</p>
+      </div>
+      <h4>Controls</h4>
+      <div class="box box-3">
+        <ul class="controls">
+          <li>p - pause</li>
+          <li>r - rotate</li>
+          <li>a - right</li>
+          <li>d - left</li>
+          <li>s - down</li>
+        </ul>
+      </div>
+      <button class="btn" id="start">Replay</button>
+      <button class="btn" id="pause">Pause</button>
+    </div>
+
+    <script src="/index.js"></script>
+  </body>
+</html>

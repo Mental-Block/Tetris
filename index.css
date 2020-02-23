@@ -3,6 +3,9 @@
 }
 
 body {
+  background-color: black;
+  color: white;
+  font-family: Arial, Helvetica, sans-serif;
   display: flex;
   justify-items: center;
   justify-content: center;
@@ -10,7 +13,7 @@ body {
 
 .main {
   display: flex;
-  justify-content: center;
+  justify-content: flex-end;
   align-items: center;
   flex-direction: column;
   text-align: center;
@@ -25,23 +28,69 @@ body {
   flex-direction: column;
 }
 
-.box {
-  width: 100px;
-  height: 100px;
-  border: 1px solid #000000;
+/* applys because it's after */
+.secondary-add {
+  display: none;
 }
 
-.score {
+.box {
   display: flex;
   justify-content: center;
   align-items: center;
+  border: 1px solid #ffffff;
+  width: 100px;
+  height: 100px;
+}
+
+.box-2 {
+  height: 30px;
+}
+
+.box-3 {
+  height: 120px;
+}
+
+#image {
 }
 
 #scoreCount {
 }
 
+#level {
+}
+
+.controls {
+  padding: 0 15px;
+  list-style: none;
+  line-height: 20px;
+}
+
 #canvas {
-  background: url(./assets/grid.png);
   zoom: 1;
   border: 1px solid #000000;
+  background: url(./tetislogo.png) no-repeat center;
+  cursor: pointer;
+}
+
+.btn {
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 1.25rem;
+  color: white;
+  width: 100px;
+  padding: 15px 0;
+}
+
+.btn:hover {
+  opacity: 0.9;
+  transition: 250ms ease-in;
+}
+
+#start {
+  background-color: #257700;
+  margin: 20px 0;
+}
+
+#pause {
+  background-color: #6e6d6d;
 }

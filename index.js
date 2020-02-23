@@ -1,164 +1,112 @@
 "use strict";
+//canvas
 var canvas = document.getElementById("canvas");
 var ctx = canvas.getContext("2d");
+
+//buttons
 var pauseButton = document.getElementById("pause");
 var startButton = document.getElementById("start");
+var secondary = document.getElementById("second");
 
-let count = 0,
-  timer,
-  paused = false;
-function counter() {
-  count++;
-  timer = setTimeout(function() {
-    counter();
-  }, 1000);
-}
+//timer
+var timer;
+var counter;
+var gameDifficulty = 1000;
 
-pauseButton.addEventListener("click", () => {
-  clearTimeout(timer);
-  if (pauseButton.innerHTML === "Pause") {
-    pauseButton.innerHTML = "Unpause";
-    paused = false;
-    counter();
-  } else {
-    pauseButton.innerHTML = "Pause";
-    paused = !paused;
-    if (!paused) {
-      counter();
-    }
-  }
+//grid
+var grid = [];
+const col = 10;
+const row = 20;
+
+const colors = {
+  nullblock: "#FFFFFF",
+  Oblock: "#FFFF00",
+  Lblock: "#00FFEB",
+  Jblock: "#0000FF",
+  Lblock: "#FF9300",
+  Sblock: "#39F100",
+  Tblock: "#8700F1",
+  Zblock: "#E30000"
+};
+canvas.addEventListener("click", () => {
+  secondary.classList.remove("secondary-add");
 });
-
-ctx.fillStyle = "rgb(0, 0, 0)";
-
-//starting positions
-let x = 4;
-let y = 0;
-startGame();
-
-// declare blocks in memory and DOM foreach block called
-class ODisplayBlock {
-  ODisplayBlock = blockPosAndPrint(x + 1, y, 1, 2, x, y, 1, 2);
-  OBlock = [
-    [0, 0, 0, 0],
-    [0, 1, 1, 0],
-    [0, 1, 1, 0],
-    [0, 0, 0, 0]
-  ];
-}
-class IDisplayBlock {
-  IDisplayBlock = blockPosAndPrint(x, y, 1, 4, 0, x, y, 0, 0);
-  IBlock = [
-    [0, 1, 0, 0],
-    [0, 1, 0, 0],
-    [0, 1, 0, 0],
-    [0, 1, 0, 0]
-  ];
-}
-class JDisplayBlock {
-  JDisplayBlock = blockPosAndPrint(x, y, 1, 1, x, y + 1, 3, 1);
-  JBlock = [
-    [0, 0, 0, 0],
-    [0, 1, 0, 0],
-    [0, 1, 1, 1],
-    [0, 0, 0, 0]
-  ];
-}
-class LDisplayBlock {
-  LDisplayBlock = blockPosAndPrint(x, y, 1, 1, x, y + 1, 3, 1);
-  LBlock = [
-    [0, 0, 0, 0],
-    [0, 0, 1, 0],
-    [1, 1, 1, 0],
-    [0, 0, 0, 0]
-  ];
-}
-class ZDisplayBlock {
-  ZDisplayBlock = blockPosAndPrint(x + 1, y + 1, 2, 1, x, y, 2, 1);
-  ZBlock = [
-    [0, 0, 0, 0],
-    [1, 1, 0, 0],
-    [0, 1, 1, 0],
-    [0, 0, 0, 0]
-  ];
-}
-class SDisplayBlock {
-  SDisplayBlock = blockPosAndPrint(x - 1, y + 1, 2, 1, x, y, 2, 1);
-  SBlock = [
-    [0, 0, 0, 0],
-    [0, 1, 1, 0],
-    [1, 1, 0, 0],
-    [0, 0, 0, 0]
-  ];
-}
-class TDisplayBlock {
-  TDisplayBlock = blockPosAndPrint(x + 1, y, 1, 3, x, y + 1, 1, 1);
-  TBlock = [
-    [0, 0, 0, 0],
-    [0, 0, 1, 0],
-    [0, 1, 1, 0],
-    [0, 0, 1, 0]
-  ];
-}
+canvas.addEventListener("click", startGame);
+startButton.addEventListener("click", startGame);
+loadingScreen();
 
 function runGame() {
-  initGrid();
-  getRandomBlock();
-  console.log(counter());
+  createGrid();
+  drawBoard();
+  pauseButton.addEventListener("click", pauseGame);
 }
 
-function getRandomBlock() {
-  switch (Math.floor(Math.random() * 7)) {
-    case 0:
-      new ODisplayBlock();
-      break;
-    case 1:
-      new IDisplayBlock();
-      break;
-    case 2:
-      new LDisplayBlock();
-      break;
-    case 3:
-      new ZDisplayBlock();
-      break;
-    case 4:
-      new SDisplayBlock();
-      break;
-    case 5:
-      new TDisplayBlock();
-      break;
-    case 6:
-      new JDisplayBlock();
-      break;
+function loadingScreen() {
+  canvas.width = 350;
+  canvas.height = 600;
+  ctx.font = "36px Impact";
+  ctx.fillStyle = "white";
+  ctx.textAlign = "center";
+  ctx.fillText("PRESS TO START", 175, 425);
+}
+function clearLoadingScreen() {
+  canvas.width = 300;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+function createGrid() {
+  let whiteSpace = colors.nullblock;
+  for (let i = 0; i < row; i++) {
+    grid[i] = [];
+    for (let j = 0; j < col; j++) {
+      grid[i][j] = whiteSpace;
+    }
   }
+}
+function drawBoard() {
+  for (let i = 0; i < col; i++) {
+    for (let j = 0; j < row; j++) {
+      drawSquareAndPosition(i, j, grid[i][j]);
+    }
+  }
+}
+function drawSquareAndPosition(x, y, color) {
+  const square = 30;
+  ctx.fillStyle = color;
+  ctx.fillRect(x * square, y * square, square, square);
+  ctx.strokeStyle = "black";
+  ctx.strokeRect(x * square, y * square, square, square);
 }
 function startGame() {
   let gameOn;
-  startButton.addEventListener("click", () => {
-    if (gameOn === true) {
-      return;
-    } else {
-      gameOn = true;
-      runGame();
-    }
-  });
-}
-function blockPosAndPrint(a, b, c, d, e, f, g, h) {
-  let block = ctx.fillRect(30 * a, 30 * b, 30 * c, 30 * d);
-  let block2 = ctx.fillRect(30 * e, 30 * f, 30 * g, 30 * h);
-  return block && block2;
-}
-function initGrid() {
-  //standard grid
-  var row = 19; // + 1
-  var column = 9; // + 1
-  let grid = new Array();
-
-  for (let i = 0; i <= row; i++) {
-    grid[i] = new Array();
-    for (let j = 0; j <= column; j++) {
-      grid[i][j] = 0;
-    }
+  if (!gameOn) {
+    clearLoadingScreen();
   }
-  return grid;
+  if (gameOn === true) {
+    return;
+  } else {
+    gameOn = true;
+    runGame();
+  }
+}
+function gameCounter() {
+  let count = 0;
+  counter = () => {
+    count++;
+    console.log(count);
+    timer = setTimeout(function() {
+      counter();
+    }, gameDifficulty);
+  };
+  counter();
+}
+function pauseGame() {
+  let paused = false;
+
+  clearTimeout(timer);
+  paused = !paused;
+  pauseButton.innerHTML = "Unpause";
+  if (!paused) {
+    counter();
+    pauseButton.innerHTML = "Pause";
+  }
 }
