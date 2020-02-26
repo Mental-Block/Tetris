@@ -1,2 +1,3 @@
 # Tetris
-A fun game
+
+Tetris is a tile-matching puzzle video game. 
