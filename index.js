@@ -10,9 +10,8 @@ var startButton = document.getElementById("start");
 var secondary = document.getElementById("second");
 
 //timer
+var gameDifficulty = 1000;
 var timer;
-var counter;
-var gameDifficulty = 2000;
 
 //grid
 var grid = [];
@@ -164,8 +163,10 @@ const zblock = [
     [1, 0, 0]
   ]
 ];
+
+// blocks with colors
 const nullBlock = "#FFFFFF";
-const colors = [
+const blocksColors = [
   [oblock, "#FFFF00"],
   [lblock, "#00FFEB"],
   [jblock, "#0000FF"],
@@ -175,26 +176,17 @@ const colors = [
   [zblock, "#E30000"]
 ];
 
-loadingScreen();
-canvas.addEventListener("click", startGame);
-canvas.addEventListener("click", () => {
-  secondary.classList.remove("secondary-add");
-});
-
-let p = new Piece(colors[0][0], colors[0][1]);
-
+// class & constructor for game pieces
 function Piece(block, colour) {
   this.block = block;
   this.colour = colour;
-
   this.blockN = 0;
   this.activeblock = this.block[this.blockN];
-
   this.x = 3;
-  this.y = -1;
+  this.y = 5;
 }
 
-Piece.prototype.drawBlock = function() {
+Piece.prototype.blockTemplate = function() {
   for (let i = 0; i < this.activeblock.length; i++) {
     for (let j = 0; j < this.activeblock.length; j++) {
       if (this.activeblock[i][j])
@@ -203,45 +195,53 @@ Piece.prototype.drawBlock = function() {
   }
 };
 
+Piece.prototype.drawBlock = function() {
+  this.blockTemplate();
+};
+
 Piece.prototype.deleteBlock = function() {
-  for (let i = 0; i < this.activeblock.length; i++) {
-    for (let j = 0; j < this.activeblock.length; j++) {
-      if (this.activeblock[i][j]) {
-        drawSquareAndPosition(this.x + i, this.y + j, nullBlock);
-      }
-    }
-  }
+  this.blockTemplate();
 };
 
 Piece.prototype.moveDown = function() {
-  this.y++;
   this.drawBlock();
-};
-
-Piece.prototype.DropBlock = function() {
   this.y++;
-  p.moveDown();
-  requestAnimationFrame(this.DropBlock());
 };
 
+/* EVERYTHING ABOVE IS INITIALIZATION  */
+
+//stuff that can be loaded pregame
+loadingScreen();
+canvas.addEventListener("click", startGame);
+canvas.addEventListener("click", () => {
+  secondary.classList.remove("secondary-add");
+});
+
+let p = new Piece(blocksColors[0][0], blocksColors[0][1]);
+
+// Initial setup for the game
 function startGame() {
   canvas.removeEventListener("click", startGame);
   clearLoadingScreen();
-  gameCounter();
+  createGrid();
   runGame();
 }
+
+// Game Loop
 function runGame() {
   document.addEventListener("keydown", moveKeys);
-  createGrid();
   drawBoard();
   p.drawBlock();
-  p.DropBlock();
-
-  //p.d
-
+  dropBlock();
   pauseGame();
 }
 
+function dropBlock() {
+  timer = setTimeout(() => {
+    p.moveDown();
+    p.deleteBlock();
+  }, gameDifficulty);
+}
 function loadingScreen() {
   canvas.width = 350;
   canvas.height = 600;
@@ -277,24 +277,13 @@ function drawSquareAndPosition(x, y, colour) {
   ctx.strokeStyle = "#000000";
   ctx.strokeRect(x * square, y * square, square, square);
 }
-function gameCounter() {
-  let count = 0;
-  counter = () => {
-    count++;
-    timer = setTimeout(function() {
-      counter();
-    }, gameDifficulty);
-  };
-  counter();
-}
 function pauseGame() {
-  let paused = true;
   pauseButton.addEventListener("click", () => {
-    clearTimeout(timer);
-    paused = !paused;
-    pauseButton.innerHTML = "Unpause";
-    if (!paused) {
-      counter();
+    if (pauseButton.innerHTML === "Pause") {
+      pauseButton.innerHTML = "Unpause";
+      clearTimeout(timer);
+    } else {
+      dropBlock();
       pauseButton.innerHTML = "Pause";
     }
   });
