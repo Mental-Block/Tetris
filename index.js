@@ -2,7 +2,6 @@
 //canvas
 var canvas = document.getElementById("canvas");
 var ctx = canvas.getContext("2d");
-const square = 30;
 
 //buttons
 var pauseButton = document.getElementById("pause");
@@ -18,7 +17,10 @@ var grid = [];
 const col = 10;
 const row = 20;
 
-//blocks in memory
+// true or false bool
+var endGame;
+
+//blocks with rotation
 const oblock = [
   [
     [0, 0, 0, 0],
@@ -166,13 +168,13 @@ const zblock = [
 
 // blocks with colors
 const nullBlock = "#FFFFFF";
-const blocksColors = [
+const blocks = [
   [oblock, "#FFFF00"],
   [lblock, "#00FFEB"],
   [jblock, "#0000FF"],
-  [iblock, "#FF9300"],
+  [tblock, "#FF9300"],
   [sblock, "#39F100"],
-  [tblock, "#8700F1"],
+  [iblock, "#8700F1"],
   [zblock, "#E30000"]
 ];
 
@@ -182,48 +184,118 @@ function Piece(block, colour) {
   this.colour = colour;
   this.blockN = 0;
   this.activeblock = this.block[this.blockN];
-  this.x = 3;
-  this.y = 5;
+  this.x = 4;
+  this.y = -2;
 }
 
-Piece.prototype.blockTemplate = function() {
+Piece.prototype.blockTemplate = function(colours) {
   for (let i = 0; i < this.activeblock.length; i++) {
     for (let j = 0; j < this.activeblock.length; j++) {
       if (this.activeblock[i][j])
-        drawSquareAndPosition(this.x + i, this.y + j, this.colour);
+        drawSquareAndPosition(this.x + i, this.y + j, colours);
     }
   }
 };
-
 Piece.prototype.drawBlock = function() {
-  this.blockTemplate();
+  this.blockTemplate(this.colour);
 };
-
 Piece.prototype.deleteBlock = function() {
-  this.blockTemplate();
+  this.blockTemplate(nullBlock);
 };
-
 Piece.prototype.moveDown = function() {
-  this.drawBlock();
-  this.y++;
+  if (!this.collision(0, 1, this.activeblock)) {
+    this.deleteBlock();
+    this.y++;
+    this.drawBlock();
+  } else {
+    this.lock();
+    p = randomPiece();
+  }
+};
+Piece.prototype.moveLeft = function() {
+  if (!this.collision(-1, 0, this.activeblock)) {
+    this.deleteBlock();
+    this.x--;
+    this.drawBlock();
+  }
+};
+Piece.prototype.moveRight = function() {
+  if (!this.collision(1, 0, this.activeblock)) {
+    this.deleteBlock();
+    this.x++;
+    this.drawBlock();
+  }
+};
+Piece.prototype.rotate = function() {
+  let nextBlock = this.block[(this.blockN + 1) % this.block.length];
+  let kick = 0;
+  if (this.collision(0, 0, nextBlock)) {
+    if (this.x > col / 2) {
+      kick = -1;
+    } else {
+      kick = -1;
+    }
+  }
+  if (!this.collision(kick, 0, nextBlock)) {
+    this.deleteBlock();
+    this.x += kick;
+    this.blockN = (this.blockN + 1) % this.block.length;
+    this.activeblock = this.block[this.blockN];
+    this.drawBlock();
+  }
+};
+Piece.prototype.lock = function(colours) {
+  for (let i = 0; i < this.activeblock.length; i++) {
+    for (let j = 0; j < this.activeblock.length; j++) {
+      if (!this.activeblock[i][j]) {
+        continue;
+      }
+      if (this.y + j < 0) {
+        alert("gameover");
+        gameOver();
+        break;
+      }
+      grid[this.y + i][this.x + j] = colours;
+    }
+  }
+};
+Piece.prototype.collision = function(x, y, piece) {
+  for (let i = 0; i < piece.length; i++) {
+    for (let j = 0; j < piece.length; j++) {
+      // after piece is moved
+      let newXLocation = this.x + i + x;
+      let newYLocation = this.y + j + y;
+      if (!piece[i][j]) {
+        continue;
+      }
+      if (newXLocation < 0 || newXLocation >= col || newYLocation >= row) {
+        return true;
+      }
+      if (newYLocation < 0) {
+        continue;
+      }
+      if (grid[newYLocation][newXLocation] != nullBlock) {
+        return true;
+      }
+    }
+  }
+  return false;
 };
 
-/* EVERYTHING ABOVE IS INITIALIZATION  */
+let p = randomPiece();
 
-//stuff that can be loaded pregame
 loadingScreen();
 canvas.addEventListener("click", startGame);
 canvas.addEventListener("click", () => {
   secondary.classList.remove("secondary-add");
 });
 
-let p = new Piece(blocksColors[0][0], blocksColors[0][1]);
-
 // Initial setup for the game
 function startGame() {
   canvas.removeEventListener("click", startGame);
   clearLoadingScreen();
   createGrid();
+  endGame = false;
   runGame();
 }
 
@@ -231,7 +303,6 @@ function startGame() {
 function runGame() {
   document.addEventListener("keydown", moveKeys);
   drawBoard();
-  p.drawBlock();
   dropBlock();
   pauseGame();
 }
@@ -239,7 +310,7 @@ function runGame() {
 function dropBlock() {
   timer = setTimeout(() => {
     p.moveDown();
-    p.deleteBlock();
+    dropBlock();
   }, gameDifficulty);
 }
 function loadingScreen() {
@@ -272,6 +343,7 @@ function drawBoard() {
   }
 }
 function drawSquareAndPosition(x, y, colour) {
+  const square = 30;
   ctx.fillStyle = colour;
   ctx.fillRect(x * square, y * square, square, square);
   ctx.strokeStyle = "#000000";
@@ -288,16 +360,25 @@ function pauseGame() {
     }
   });
 }
-function endGame() {
-  startButton.addEventListener("click", startGame);
-}
+// function gameOver() {
+//   startButton.addEventListener("click", startGame);
+// }
 function moveKeys(event) {
-  if (event.keyCode === 37 || 65) {
+  if (event.keyCode == 65) {
+    // 65 === a
+    p.moveLeft();
+  } else if (event.keyCode == 82) {
+    // 82 === r
+    p.rotate();
+  } else if (event.keyCode == 68) {
+    // 68 === d
+    p.moveRight();
+  } else if (event.keyCode == 83) {
+    // 83 === s
     p.moveDown();
-  } else if (event.keyCode == 38 || 82) {
-  } else if (event.keyCode == 39 || 68) {
-  } else if (event.keyCode == 40 || 83) {
-  } else if (event.keyCode == 80) {
-    pauseGame();
   }
+}
+function randomPiece() {
+  let r = Math.floor(Math.random(6) * blocks.length);
+  return new Piece(blocks[r][0], blocks[r][1]);
 }
