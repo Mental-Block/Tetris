@@ -3,22 +3,26 @@
 var canvas = document.getElementById("canvas");
 var ctx = canvas.getContext("2d");
 
-//buttons
+//buttons and components
 var pauseButton = document.getElementById("pause");
 var startButton = document.getElementById("start");
 var secondary = document.getElementById("second");
+var displayLevel = document.getElementById("level");
+var displayScore = document.getElementById("scoreCount");
 
 //timer
-var gameDifficulty = 1000;
 var timer;
+var count;
+
+var levelDifficulty;
+var level;
+var score;
+var gameOn;
 
 //grid
 var grid = [];
 const col = 10;
 const row = 20;
-
-// true or false bool
-var endGame;
 
 //blocks with rotation
 const oblock = [
@@ -178,6 +182,8 @@ const blocks = [
   [zblock, "#E30000"]
 ];
 
+var p = randomPiece();
+
 // class & constructor for game pieces
 function Piece(block, colour) {
   this.block = block;
@@ -187,7 +193,6 @@ function Piece(block, colour) {
   this.x = 4;
   this.y = -2;
 }
-
 Piece.prototype.blockTemplate = function(colours) {
   for (let i = 0; i < this.activeblock.length; i++) {
     for (let j = 0; j < this.activeblock.length; j++) {
@@ -233,7 +238,7 @@ Piece.prototype.rotate = function() {
     if (this.x > col / 2) {
       kick = -1;
     } else {
-      kick = -1;
+      kick = 1;
     }
   }
   if (!this.collision(kick, 0, nextBlock)) {
@@ -244,20 +249,19 @@ Piece.prototype.rotate = function() {
     this.drawBlock();
   }
 };
-Piece.prototype.lock = function(colours) {
+Piece.prototype.lock = function() {
   for (let i = 0; i < this.activeblock.length; i++) {
     for (let j = 0; j < this.activeblock.length; j++) {
       if (!this.activeblock[i][j]) {
         continue;
       }
       if (this.y + j < 0) {
-        alert("gameover");
         gameOver();
-        break;
       }
-      grid[this.y + i][this.x + j] = colours;
+      grid[this.y + j][this.x + i] = this.colour;
     }
   }
+  removeRows();
 };
 Piece.prototype.collision = function(x, y, piece) {
   for (let i = 0; i < piece.length; i++) {
@@ -282,8 +286,6 @@ Piece.prototype.collision = function(x, y, piece) {
   return false;
 };
 
-let p = randomPiece();
-
 loadingScreen();
 canvas.addEventListener("click", startGame);
 canvas.addEventListener("click", () => {
@@ -293,25 +295,32 @@ canvas.addEventListener("click", () => {
 // Initial setup for the game
 function startGame() {
   canvas.removeEventListener("click", startGame);
+  levelDifficulty = 1;
+  count = 0;
+  level = 0;
+  score = 0;
+  gameOn = true;
+  displayLevel.innerHTML = 0;
+  displayScore.innerHTML = 0;
   clearLoadingScreen();
   createGrid();
-  endGame = false;
+  drawBoard();
   runGame();
 }
-
 // Game Loop
 function runGame() {
   document.addEventListener("keydown", moveKeys);
-  drawBoard();
   dropBlock();
   pauseGame();
 }
-
 function dropBlock() {
-  timer = setTimeout(() => {
-    p.moveDown();
-    dropBlock();
-  }, gameDifficulty);
+  if (gameOn === true) {
+    timer = setTimeout(() => {
+      p.moveDown();
+      dropBlock();
+      difficulty();
+    }, 1000 * levelDifficulty);
+  }
 }
 function loadingScreen() {
   canvas.width = 350;
@@ -336,9 +345,9 @@ function createGrid() {
   }
 }
 function drawBoard() {
-  for (let i = 0; i < col; i++) {
-    for (let j = 0; j < row; j++) {
-      drawSquareAndPosition(i, j, grid[i][j]);
+  for (let i = 0; i < row; i++) {
+    for (let j = 0; j < col; j++) {
+      drawSquareAndPosition(j, i, grid[i][j]);
     }
   }
 }
@@ -354,15 +363,18 @@ function pauseGame() {
     if (pauseButton.innerHTML === "Pause") {
       pauseButton.innerHTML = "Unpause";
       clearTimeout(timer);
+      document.removeEventListener("keydown", moveKeys);
     } else {
-      dropBlock();
+      runGame();
       pauseButton.innerHTML = "Pause";
     }
   });
 }
-// function gameOver() {
-//   startButton.addEventListener("click", startGame);
-// }
+function gameOver() {
+  gameOn = false;
+  clearTimeout(timer);
+  startButton.addEventListener("click", startGame);
+}
 function moveKeys(event) {
   if (event.keyCode == 65) {
     // 65 === a
@@ -381,4 +393,33 @@ function moveKeys(event) {
 function randomPiece() {
   let r = Math.floor(Math.random(6) * blocks.length);
   return new Piece(blocks[r][0], blocks[r][1]);
+}
+function difficulty() {
+  count++;
+  if (count === 50) {
+    displayLevel.innerHTML = level++;
+    count = 0;
+    levelDifficulty = levelDifficulty - 0.05;
+  }
+}
+function removeRows() {
+  for (let i = 0; i < row; i++) {
+    let rowFull = true;
+    for (let j = 0; j < col; j++) {
+      rowFull = rowFull && grid[i][j] !== nullBlock;
+    }
+
+    if (rowFull) {
+      for (let y = i; y > 1; y--) {
+        for (let j = 0; j < row; j++) {
+          grid[y][j] = grid[y - 1][j];
+        }
+      }
+      for (let j = 0; j > col; j++) {
+        grid[0][j + 1] = nullBlock;
+      }
+      displayScore.innerHTML = score += 30;
+      drawBoard();
+    }
+  }
 }
